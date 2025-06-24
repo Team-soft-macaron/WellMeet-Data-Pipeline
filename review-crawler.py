@@ -2,6 +2,7 @@ from playwright.sync_api import sync_playwright
 from typing import List, Dict
 import time
 import os
+import hashlib
 
 
 class NaverMapReviewCrawler:
@@ -60,8 +61,13 @@ class NaverMapReviewCrawler:
                             date = elem.query_selector("time")
                             visit_date = date.inner_text() if date else ""
 
+                            # Use SHA-256 hash for unique review ID
+                            hash_input = f"{author_name}|{review_text}|{visit_date}"
+                            review_id = hashlib.sha256(
+                                hash_input.encode("utf-8")
+                            ).hexdigest()
+
                             # 중복 체크
-                            review_id = f"{author_name}_{review_text[:30]}"
                             if not any(r.get("id") == review_id for r in reviews):
                                 reviews.append(
                                     {
@@ -124,6 +130,7 @@ def main():
 
     for i, review in enumerate(reviews, 1):
         print(f"\n[{i}] {review['author']} ({review['visit_date']})")
+        print(f"ID: {review['id']}")
         print(f"Content: {review['content']}")
 
 
