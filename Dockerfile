@@ -18,7 +18,8 @@ RUN dnf update -y && dnf install -y \
     alsa-lib \
     && dnf clean all
 COPY requirements.txt .
-RUN pip install -r requirements.txt && playwright install chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN pip install -r requirements.txt && playwright install
 
 COPY . .
 

@@ -12,9 +12,62 @@ class NaverMapReviewCrawler:
         """네이버 지도의 모든 리뷰 크롤링
         existing_ids: 이미 존재하는 리뷰 id의 set. 발견 시 즉시 중단 (필수)."""
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=self.headless)
-            page = browser.new_page()
-
+            launch_options = {
+                "headless": self.headless,
+                "args": [
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-features=IsolateOrigins,site-per-process",
+                    "--disable-web-security",
+                    "--disable-site-isolation-trials",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                    "--disable-gpu",
+                    "--disable-extensions",
+                    "--disable-default-apps",
+                    "--disable-sync",
+                    "--disable-translate",
+                    "--hide-scrollbars",
+                    "--metrics-recording-only",
+                    "--mute-audio",
+                    "--safebrowsing-disable-auto-update",
+                    "--ignore-certificate-errors",
+                    "--ignore-ssl-errors",
+                    "--ignore-certificate-errors-spki-list",
+                    "--disable-setuid-sandbox",
+                    "--window-size=1920,1080",
+                    "--start-maximized",
+                ],
+            }
+            browser = p.chromium.launch(**launch_options)
+            context = browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                locale="ko-KR",
+                timezone_id="Asia/Seoul",
+                permissions=["geolocation"],
+                geolocation={"latitude": 37.5665, "longitude": 126.9780},  # 서울
+                color_scheme="light",
+                device_scale_factor=1,
+                is_mobile=False,
+                has_touch=False,
+                extra_http_headers={
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                    "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Cache-Control": "max-age=0",
+                    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Ch-Ua-Platform": '"Windows"',
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-User": "?1",
+                    "Sec-Fetch-Dest": "document",
+                    "Upgrade-Insecure-Requests": "1",
+                },
+            )
+            page = context.new_page()
             reviews = []
 
             try:
