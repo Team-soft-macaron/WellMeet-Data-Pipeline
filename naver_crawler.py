@@ -72,6 +72,8 @@ class NaverMapReviewCrawler:
 
             try:
                 # 리뷰 페이지로 이동
+                page.goto("https://httpbin.org/headers")
+                page.wait_for_timeout(2000)
                 url = f"https://pcmap.place.naver.com/restaurant/{place_id}/review/visitor"
                 page.goto(url)
                 page.wait_for_selector("ul#_review_list", timeout=10000)

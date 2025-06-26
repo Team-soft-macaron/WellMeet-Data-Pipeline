@@ -7,8 +7,6 @@ from naver_crawler import NaverMapReviewCrawler
 def main():
     # 환경변수에서 S3 정보 읽기
     bucket_name = os.environ.get("S3_BUCKET_NAME")
-    aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-    aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
     region_name = os.environ.get("AWS_REGION")
 
     # 환경변수에서 place_id 읽기
@@ -23,8 +21,6 @@ def main():
     # S3 매니저 생성
     storage_manager = ReviewStorageManager(
         bucket_name=bucket_name,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
         region_name=region_name,
     )
 
