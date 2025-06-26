@@ -1,26 +1,29 @@
-FROM public.ecr.aws/lambda/python:3.12
-RUN dnf update -y && dnf install -y \
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y \
     wget \
-    nss \
-    nspr \
-    atk \
-    at-spi2-atk \
-    cups-libs \
-    libxkbcommon \
-    at-spi2-core \
-    libXcomposite \
-    libXdamage \
-    libXfixes \
-    libXrandr \
-    mesa-libgbm \
-    pango \
-    cairo \
-    alsa-lib \
-    && dnf clean all
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libxkbcommon0 \
+    libatspi2.0-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
 COPY requirements.txt .
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN pip install -r requirements.txt && playwright install
+RUN pip install -r requirements.txt && playwright install chromium
 
 COPY . .
 
-CMD ["lambda_function.handler"]
+CMD ["python3", "main.py"]
