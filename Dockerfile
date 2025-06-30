@@ -26,4 +26,4 @@ RUN pip install -r requirements.txt && playwright install chromium
 
 COPY . .
 
-CMD ["python", "review-crawler.py"]
+CMD ["python3", "main.py"]
