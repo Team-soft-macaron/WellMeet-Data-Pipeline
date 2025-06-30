@@ -69,6 +69,7 @@ class NaverMapReviewCrawler:
             )
             page = context.new_page()
             reviews = []
+            already_appended_ids = set()
 
             try:
                 # 리뷰 페이지로 이동
@@ -132,7 +133,7 @@ class NaverMapReviewCrawler:
                                 break
 
                             # 중복 체크
-                            if not any(r.get("id") == review_id for r in reviews):
+                            if review_id not in already_appended_ids:
                                 reviews.append(
                                     {
                                         "id": review_id,
@@ -141,6 +142,11 @@ class NaverMapReviewCrawler:
                                         "content": review_text,
                                         "visit_date": visit_date,
                                     }
+                                )
+                                already_appended_ids.add(review_id)
+                                page.evaluate(
+                                    "(element) => element.remove()",
+                                    elem,
                                 )
 
                         except Exception as e:
