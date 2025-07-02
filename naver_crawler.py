@@ -95,6 +95,9 @@ class NaverMapReviewCrawler:
                         "ul#_review_list > li.EjjAW"
                     )
                     current_count = len(reviews)
+                    # 1000개 이상 리뷰가 있으면 중단
+                    while current_count > 1000:
+                        break
 
                     for elem in review_elements:
                         try:
@@ -150,6 +153,7 @@ class NaverMapReviewCrawler:
                                 )
 
                         except Exception as e:
+                            print(f"리뷰 수집 오류: {str(e)}")
                             continue
 
                     print(f"현재까지 {len(reviews)}개 리뷰 수집")

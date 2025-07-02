@@ -29,7 +29,7 @@ def main():
     print(f"기존 리뷰 {len(existing_ids)}개를 S3에서 불러옴")
 
     # 크롤러 생성 및 크롤링
-    crawler = NaverMapReviewCrawler(headless=True)
+    crawler = NaverMapReviewCrawler(headless=False)
     reviews = crawler.crawl_all_reviews(place_id, existing_ids)
 
     print(f"\n{'='*60}")
