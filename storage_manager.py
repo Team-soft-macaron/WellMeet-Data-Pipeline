@@ -1,5 +1,9 @@
 import boto3
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 
 class ReviewStorageManager:
@@ -31,11 +35,11 @@ class ReviewStorageManager:
             response = self.s3.get_object(Bucket=self.bucket_name, Key=key)
             existing_data = response["Body"].read().decode("utf-8")
             existing_reviews = json.loads(existing_data)
-            print(f"기존 리뷰 {len(existing_reviews)}개 발견")
+            logger.info(f"기존 리뷰 {len(existing_reviews)}개 발견")
         except self.s3.exceptions.NoSuchKey:
-            print(f"{key} 파일이 없어서 새로 생성")
+            logger.info(f"{key} 파일이 없어서 새로 생성")
         except Exception as e:
-            print(f"파일 읽기 오류: {e}")
+            logger.error(f"파일 읽기 오류: {e}")
 
         # 기존 리뷰와 새 리뷰 합치기
         all_reviews = existing_reviews + reviews
@@ -52,7 +56,7 @@ class ReviewStorageManager:
         # S3에 저장
         data = json.dumps(all_reviews, ensure_ascii=False, indent=2)
         self.s3.put_object(Bucket=self.bucket_name, Key=key, Body=data.encode("utf-8"))
-        print(
+        logger.info(
             f"Uploaded {key} to S3 bucket {self.bucket_name} (총 {len(all_reviews)}개 리뷰)"
         )
 
@@ -61,7 +65,7 @@ class ReviewStorageManager:
         S3 Select를 사용해 place_id.json 파일에서 리뷰 id만 리스트로 반환
         """
         key = f"{place_id}.json"
-        print(key)
+        logger.info(key)
         try:
             response = self.s3.select_object_content(
                 Bucket=self.bucket_name,
@@ -86,11 +90,11 @@ class ReviewStorageManager:
                     if line:
                         obj = json.loads(line)["_1"]
                         for object in obj:
-                            print(object["id"])
+                            logger.info(object["id"])
                             ids.append(object["id"])
 
-            print(ids)
+            logger.info(ids)
             return ids
         except Exception as e:
-            print(f"S3 Select error: {e}")
+            logger.error(f"S3 Select error: {e}")
             return []
