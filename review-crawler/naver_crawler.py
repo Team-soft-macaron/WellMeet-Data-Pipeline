@@ -196,8 +196,8 @@ class NaverMapReviewCrawler:
                     )
                     current_count = len(reviews)
                     # 1000개 이상 리뷰가 있으면 중단
-                    # if current_count > 1000:
-                    #     break
+                    if current_count > 1250:
+                        break
 
                     for elem in review_elements:
                         # 작성자
@@ -279,7 +279,7 @@ class NaverMapReviewCrawler:
 
             except Exception as e:
                 logger.error(f"크롤링 오류: {str(e)}")
-            finally:
-                browser.close()
+            # finally:
+            # browser.close()
 
             return reviews
