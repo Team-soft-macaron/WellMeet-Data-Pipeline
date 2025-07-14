@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client("s3")
 
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     S3 업로드 이벤트를 처리하는 Lambda 핸들러
 
@@ -138,7 +138,7 @@ def send_review_to_api(api_url: str, review_data: Dict[str, Any]) -> Dict[str, A
 
         # HTTP 요청 생성
         req = urllib.request.Request(
-            api_url,
+            api_url + "/api/crawling-reviews",
             data=json_data,
             headers={
                 "Content-Type": "application/json",
@@ -191,5 +191,5 @@ if __name__ == "__main__":
     os.environ["API_URL"] = "http://localhost:8080/api/crawling-reviews"
 
     # 핸들러 실행
-    result = lambda_handler(test_event, None)
+    result = handler(test_event, None)
     print(json.dumps(result, indent=2))

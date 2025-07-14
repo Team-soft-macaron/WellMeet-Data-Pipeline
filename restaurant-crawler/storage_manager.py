@@ -20,7 +20,7 @@ class RestaurantStorageManager:
 
     def upload_restaurants_json(self, query, restaurants):
         """
-        식당 리스트(restaurants)를 S3의 bucket에 place_id.json 파일로 저장
+        식당 리스트(restaurants)를 S3의 bucket에 placeId.json 파일로 저장
         기존 파일이 있으면 합치기
         """
         key = f"{query}.json"
@@ -77,8 +77,8 @@ class RestaurantStorageManager:
                     if line:
                         obj = json.loads(line)["_1"]
                         for object in obj:
-                            print(object["place_id"])
-                            ids.append(object["place_id"])
+                            print(object["placeId"])
+                            ids.append(object["placeId"])
 
             print(ids)
             return ids

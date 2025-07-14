@@ -222,8 +222,8 @@ class NaverMapRestaurantCrawler:
                             await category_elem.inner_text() if category_elem else ""
                         )
 
-                        # 식당 place_id 정보
-                        place_id = None
+                        # 식당 placeId 정보
+                        placeId = None
                         link_elem = await restaurant.query_selector("a.place_bluelink")
 
                         if link_elem:
@@ -239,7 +239,7 @@ class NaverMapRestaurantCrawler:
                             new_url = page.url
                             match = re.search(r"/place/(\d+)", new_url)
                             if match:
-                                place_id = match.group(1)
+                                placeId = match.group(1)
 
                         # 주소 찾기
                         address = None
@@ -248,7 +248,7 @@ class NaverMapRestaurantCrawler:
                         longitude = None
 
                         place_detail_url = (
-                            f"https://pcmap.place.naver.com/place/{place_id}"
+                            f"https://pcmap.place.naver.com/place/{placeId}"
                         )
                         detail_page = await context.new_page()
 
@@ -276,7 +276,7 @@ class NaverMapRestaurantCrawler:
 
                         results.append(
                             {
-                                "place_id": place_id,
+                                "placeId": placeId,
                                 "name": name,
                                 "category": category,
                                 "page": page_num,
@@ -317,8 +317,8 @@ async def main():
         region_name=REGION_NAME,
     )
 
-    # 1. S3에서 기존 place_id 리스트 가져오기
-    existing_place_ids = set(s3_manager.get_restaurant_ids_with_s3_select(search_query))
+    # 1. S3에서 기존 placeId 리스트 가져오기
+    existing_placeIds = set(s3_manager.get_restaurant_ids_with_s3_select(search_query))
 
     crawler = NaverMapRestaurantCrawler(headless=True)
 
@@ -338,15 +338,15 @@ async def main():
     for page_results in all_results:
         merged_results.extend(page_results)
 
-    # 5. 기존 place_id와 중복 제거
+    # 5. 기존 placeId와 중복 제거
     deduped_results = [
-        item for item in merged_results if item["place_id"] not in existing_place_ids
+        item for item in merged_results if item["placeId"] not in existing_placeIds
     ]
 
     print(f"\n총 {len(deduped_results)}개 신규 식당 수집")
     for i, restaurant in enumerate(deduped_results, 1):
         print(
-            f"{i}. {restaurant['place_id']} [{restaurant['name']}] "
+            f"{i}. {restaurant['placeId']} [{restaurant['name']}] "
             f"[{restaurant['category']}] [{restaurant['page']}] "
             f"[origin_address: {restaurant['origin_address']}] "
             f"[address: {restaurant['address']}] "
@@ -354,8 +354,8 @@ async def main():
         )
 
     # 6. S3에 업로드 (신규만)
-    if deduped_results:
-        s3_manager.upload_restaurants_json(search_query, deduped_results)
+    # if deduped_results:
+    #     s3_manager.upload_restaurants_json(search_query, deduped_results)
     else:
         print("신규 식당 없음, 업로드 생략")
 

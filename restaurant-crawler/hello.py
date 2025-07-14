@@ -158,9 +158,9 @@ class NaverMapRestaurantCrawler:
             await frame.wait_for_selector("li.UEzoS", state="visible", timeout=TIMEOUT)
 
     @handle_errors()
-    async def _extract_place_id(self, restaurant, page):
-        """place_id 추출"""
-        place_id = None
+    async def _extract_placeId(self, restaurant, page):
+        """placeId 추출"""
+        placeId = None
         link_elem = await restaurant.query_selector("a.place_bluelink")
 
         if link_elem:
@@ -174,19 +174,19 @@ class NaverMapRestaurantCrawler:
             new_url = page.url
             match = re.search(r"/place/(\d+)", new_url)
             if match:
-                place_id = match.group(1)
+                placeId = match.group(1)
 
-        return place_id
+        return placeId
 
     @handle_errors()
-    async def _extract_restaurant_details(self, context, place_id):
+    async def _extract_restaurant_details(self, context, placeId):
         """식당 상세 정보 추출"""
         address = None
         cleaned_address = None
         latitude = None
         longitude = None
 
-        place_detail_url = f"https://pcmap.place.naver.com/place/{place_id}"
+        place_detail_url = f"https://pcmap.place.naver.com/place/{placeId}"
         detail_page = await context.new_page()
 
         try:
@@ -218,16 +218,16 @@ class NaverMapRestaurantCrawler:
         category_elem = await restaurant.query_selector("span.KCMnt")
         category = await category_elem.inner_text() if category_elem else ""
 
-        # 식당 place_id 정보
-        place_id = await self._extract_place_id(restaurant, page)
+        # 식당 placeId 정보
+        placeId = await self._extract_placeId(restaurant, page)
 
         # 주소 찾기
         address, cleaned_address, latitude, longitude = (
-            await self._extract_restaurant_details(context, place_id)
+            await self._extract_restaurant_details(context, placeId)
         )
 
         return {
-            "place_id": place_id,
+            "placeId": placeId,
             "name": name,
             "category": category,
             "page": page_num,
@@ -381,10 +381,10 @@ async def main():
         region_name=REGION_NAME,
     )
 
-    # 1. S3에서 기존 place_id 리스트 가져오기
-    existing_place_ids = set()
+    # 1. S3에서 기존 placeId 리스트 가져오기
+    existing_placeIds = set()
     try:
-        existing_place_ids = set(
+        existing_placeIds = set(
             s3_manager.get_restaurant_ids_with_s3_select(search_query)
         )
     except Exception as e:
@@ -412,15 +412,15 @@ async def main():
         if page_results:
             merged_results.extend(page_results)
 
-    # 5. 기존 place_id와 중복 제거
+    # 5. 기존 placeId와 중복 제거
     deduped_results = [
-        item for item in merged_results if item["place_id"] not in existing_place_ids
+        item for item in merged_results if item["placeId"] not in existing_placeIds
     ]
 
     logger.info(f"\n총 {len(deduped_results)}개 신규 식당 수집")
     for i, restaurant in enumerate(deduped_results, 1):
         logger.info(
-            f"{i}. {restaurant['place_id']} [{restaurant['name']}] "
+            f"{i}. {restaurant['placeId']} [{restaurant['name']}] "
             f"[{restaurant['category']}] [{restaurant['page']}] "
             f"[origin_address: {restaurant['origin_address']}] "
             f"[address: {restaurant['address']}] "

@@ -47,11 +47,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 f"Saved {len(saved_restaurants)} restaurants to DB from {object_key}"
             )
 
-            # job_responses = submit_batch_jobs_for_restaurants(
-            #     saved_restaurants, bucket_name, object_key
-            # )
-            # total_submitted_jobs += len(job_responses)
-            # logger.info(f"Submitted {len(job_responses)} batch jobs for {object_key}")
+            job_responses = submit_batch_jobs_for_restaurants(
+                saved_restaurants, bucket_name, object_key
+            )
+            total_submitted_jobs += len(job_responses)
+            logger.info(f"Submitted {len(job_responses)} batch jobs for {object_key}")
 
         return {
             "statusCode": 200,
@@ -112,14 +112,14 @@ def save_restaurants_to_db(data: Any) -> List[Dict[str, Any]]:
 
 
 def is_valid_restaurant(restaurant: Dict[str, Any]) -> bool:
-    required_fields = ["place_id", "name", "address", "latitude", "longitude"]
+    required_fields = ["placeId", "name", "address", "latitude", "longitude"]
     return all(field in restaurant for field in required_fields)
 
 
 def post_restaurant_to_api(restaurant: Dict[str, Any]) -> Dict[str, Any]:
     try:
         req = urllib.request.Request(
-            API_URL,
+            API_URL + "/api/restaurants",
             data=json.dumps(restaurant).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -127,7 +127,7 @@ def post_restaurant_to_api(restaurant: Dict[str, Any]) -> Dict[str, Any]:
         with urllib.request.urlopen(req, timeout=10) as response:
             if response.status == 200 or response.status == 201:
                 logger.info(
-                    f"Saved restaurant via API: {restaurant['name']} (placeId: {restaurant['place_id']})"
+                    f"Saved restaurant via API: {restaurant['name']} (placeId: {restaurant['placeId']})"
                 )
                 return json.loads(response.read().decode("utf-8"))
             else:
@@ -149,7 +149,7 @@ def submit_batch_jobs_for_restaurants(
     for restaurant in restaurants:
         try:
             job_response = submit_batch_job(
-                placeId=restaurant["place_id"],
+                placeId=restaurant["placeId"],
                 source_bucket=bucket_name,
                 source_key=object_key,
             )
@@ -169,11 +169,11 @@ def submit_batch_job(
     response = batch_client.submit_job(
         jobName=job_name,
         jobQueue=JOB_QUEUE,
-        obDefinition=JOB_DEFINITION,
+        jobDefinition=JOB_DEFINITION,
         parameters={},
         containerOverrides={
             "environment": [
-                {"name": "placeId", "value": placeId},
+                {"name": "PLACE_ID", "value": placeId},
                 {"name": "SOURCE_BUCKET", "value": source_bucket},
                 {"name": "SOURCE_KEY", "value": source_key},
             ]
