@@ -160,7 +160,7 @@ class NaverMapReviewCrawler:
 
     def _sort_by_latest(self, page):
         """리뷰를 최신순으로 정렬"""
-        sort_buttons = page.query_selector_all("a.ScBz5")
+        sort_buttons = page.query_selector_all("a.place_btn_option")
         for btn in sort_buttons:
             btn_text = btn.inner_text()
             if "최신순" in btn_text:
@@ -312,7 +312,7 @@ class NaverMapReviewCrawler:
 # 사용 예시
 def main():
     try:
-        crawler = NaverMapReviewCrawler(headless=True)
+        crawler = NaverMapReviewCrawler(headless=False)
 
         # 예시: 특정 장소의 리뷰 크롤링
         place_id = "1234567890"  # 실제 place_id로 변경
