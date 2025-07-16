@@ -47,11 +47,11 @@ def main():
         logger.info(f"content: {review['content']}")
 
     # S3에 업로드
-    if reviews:
-        storage_manager.upload_reviews_json(place_id, reviews)
-        logger.info(f"{len(reviews)}개 리뷰를 S3에 업로드 완료")
-    else:
-        logger.info("업로드할 신규 리뷰가 없습니다.")
+    # if reviews:
+    #     storage_manager.upload_reviews_json(place_id, reviews)
+    #     logger.info(f"{len(reviews)}개 리뷰를 S3에 업로드 완료")
+    # else:
+    #     logger.info("업로드할 신규 리뷰가 없습니다.")
 
 
 if __name__ == "__main__":
