@@ -2,7 +2,6 @@ from playwright.sync_api import sync_playwright
 from typing import List, Dict, Set
 import time
 import hashlib
-import psutil
 import os
 import logging
 
@@ -210,15 +209,6 @@ class NaverMapReviewCrawler:
             "visit_date": visit_date,
         }
 
-    def _log_resource_usage(self):
-        """리소스 사용량 로깅"""
-        process = psutil.Process(os.getpid())
-        mem_info = process.memory_info()
-        cpu_percent = psutil.cpu_percent(interval=0.1)
-        logger.info(
-            f"[Resource] RSS: {mem_info.rss / 1024 / 1024:.2f} MB, CPU: {cpu_percent:.1f}%"
-        )
-
     def _load_more_reviews(self, page):
         """더 많은 리뷰 로드"""
         more_button = page.query_selector("div.NSTUp a.fvwqf")
@@ -290,9 +280,6 @@ class NaverMapReviewCrawler:
             stop_crawling = False
 
             while not stop_crawling:
-                # 리소스 사용량 체크
-                self._log_resource_usage()
-
                 current_count = len(reviews)
 
                 # 현재 페이지의 리뷰 수집
@@ -325,7 +312,7 @@ class NaverMapReviewCrawler:
 # 사용 예시
 def main():
     try:
-        crawler = NaverMapReviewCrawler(headless=False)
+        crawler = NaverMapReviewCrawler(headless=True)
 
         # 예시: 특정 장소의 리뷰 크롤링
         place_id = "1234567890"  # 실제 place_id로 변경
