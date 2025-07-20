@@ -14,7 +14,7 @@ S3_BUCKET_NAME=<리뷰 데이터 저장할 AWS S3 버킷 이름>
 AWS_ACCESS_KEY_ID=<aws access key>
 AWS_SECRET_ACCESS_KEY=<aws secret key>
 AWS_REGION=<aws region>
-PLACE_ID=<네이버 지도 식당 place id>
+placeId=<네이버 지도 식당 place id>
 ```
 
 ### arm64 런타임 인터페이스 에뮬레이터 설치 (macOS 기준)

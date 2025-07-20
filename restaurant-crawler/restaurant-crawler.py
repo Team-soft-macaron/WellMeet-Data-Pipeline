@@ -126,8 +126,27 @@ class NaverMapRestaurantCrawler:
             results = []
 
             try:
+                # await page.goto("https://httpbin.org/ip")
+                # await page.goto("https://map.naver.com/", wait_until="domcontentloaded")
                 await page.goto("https://httpbin.org/ip")
-                await page.goto("https://map.naver.com/", wait_until="domcontentloaded")
+                await page.wait_for_timeout(TIMEOUT)
+                # 2. 네이버 메인으로 이동
+                await page.goto("https://www.naver.com", wait_until="domcontentloaded")
+                await page.wait_for_timeout(TIMEOUT)
+
+                # 3. 네이버 상단 메뉴에서 지도 클릭 (새 창이 열림)
+                map_link = page.locator(".service_name:has-text('지도')")
+
+
+                # 새 창이 열릴 때까지 기다리기 위한 설정
+                async with page.context.expect_page() as new_page_info:
+                    await map_link.click()
+                    
+                # 새로 열린 페이지로 전환
+                page = await new_page_info.value
+                await page.wait_for_load_state("domcontentloaded")
+                await page.wait_for_timeout(TIMEOUT)
+
 
                 search_input = await page.wait_for_selector(
                     "input.input_search", state="visible", timeout=TIMEOUT
@@ -158,6 +177,7 @@ class NaverMapRestaurantCrawler:
                             no_change_count += 1
 
                             if no_change_count >= max_no_change:
+                                print(current_count)
                                 print("더 이상 로드할 데이터가 없습니다.")
                                 break
                         else:
@@ -222,8 +242,8 @@ class NaverMapRestaurantCrawler:
                             await category_elem.inner_text() if category_elem else ""
                         )
 
-                        # 식당 place_id 정보
-                        place_id = None
+                        # 식당 placeId 정보
+                        placeId = None
                         link_elem = await restaurant.query_selector("a.place_bluelink")
 
                         if link_elem:
@@ -239,7 +259,7 @@ class NaverMapRestaurantCrawler:
                             new_url = page.url
                             match = re.search(r"/place/(\d+)", new_url)
                             if match:
-                                place_id = match.group(1)
+                                placeId = match.group(1)
 
                         # 주소 찾기
                         address = None
@@ -248,7 +268,7 @@ class NaverMapRestaurantCrawler:
                         longitude = None
 
                         place_detail_url = (
-                            f"https://pcmap.place.naver.com/place/{place_id}"
+                            f"https://pcmap.place.naver.com/place/{placeId}"
                         )
                         detail_page = await context.new_page()
 
@@ -273,19 +293,25 @@ class NaverMapRestaurantCrawler:
                             pass
                         finally:
                             await detail_page.close()
+                            print(
+                                f"{name} [{category}] [{page_num}] "
+                                f"[origin_address: {address}] "
+                                f"[address: {cleaned_address}] "
+                                f"[latitude: {latitude}, longitude: {longitude}]"
+                            )
 
-                        results.append(
-                            {
-                                "place_id": place_id,
-                                "name": name,
-                                "category": category,
-                                "page": page_num,
-                                "origin_address": address,
-                                "address": cleaned_address,
-                                "latitude": latitude,
-                                "longitude": longitude,
-                            }
-                        )
+                            results.append(
+                                {
+                                    "placeId": placeId,
+                                    "name": name,
+                                    "category": category,
+                                    "page": page_num,
+                                    "origin_address": address,
+                                    "address": cleaned_address,
+                                    "latitude": latitude,
+                                    "longitude": longitude,
+                                }
+                            )
                         await page.go_back()
                     except Exception as e:
                         pass
@@ -301,33 +327,27 @@ class NaverMapRestaurantCrawler:
 # 사용 예시
 async def main():
     # S3 설정 (환경변수 사용)
-    BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
-    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-    REGION_NAME = os.environ.get("AWS_REGION", "ap-northeast-2")
+    upload_bucket_name = os.environ.get("RESTAURANT_S3_BUCKET_NAME")
 
-    search_query = "공덕역 식당"
+    search_query = os.environ.get("SEARCH_QUERY")
     print(f"search_query: {search_query}")
 
     # S3 매니저 생성
     s3_manager = RestaurantStorageManager(
-        bucket_name=BUCKET_NAME,
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=REGION_NAME,
+        bucket_name=upload_bucket_name,
     )
 
-    # 1. S3에서 기존 place_id 리스트 가져오기
-    existing_place_ids = set(s3_manager.get_restaurant_ids_with_s3_select(search_query))
+    # 1. S3에서 기존 placeId 리스트 가져오기
+    existing_placeIds = set(s3_manager.get_restaurant_ids_with_s3_select(search_query))
 
     crawler = NaverMapRestaurantCrawler(headless=True)
 
     # 2. 여러 페이지 동시 실행
     tasks = [
         crawler.crawl_single_page(search_query, 1),
-        crawler.crawl_single_page(search_query, 2),
-        crawler.crawl_single_page(search_query, 3),
-        crawler.crawl_single_page(search_query, 4),
+        # crawler.crawl_single_page(search_query, 2),
+        # crawler.crawl_single_page(search_query, 3),
+        # crawler.crawl_single_page(search_query, 4),
     ]
 
     # 3. 모든 결과 대기
@@ -338,15 +358,15 @@ async def main():
     for page_results in all_results:
         merged_results.extend(page_results)
 
-    # 5. 기존 place_id와 중복 제거
+    # 5. 기존 placeId와 중복 제거
     deduped_results = [
-        item for item in merged_results if item["place_id"] not in existing_place_ids
+        item for item in merged_results if item["placeId"] not in existing_placeIds
     ]
 
     print(f"\n총 {len(deduped_results)}개 신규 식당 수집")
     for i, restaurant in enumerate(deduped_results, 1):
         print(
-            f"{i}. {restaurant['place_id']} [{restaurant['name']}] "
+            f"{i}. {restaurant['placeId']} [{restaurant['name']}] "
             f"[{restaurant['category']}] [{restaurant['page']}] "
             f"[origin_address: {restaurant['origin_address']}] "
             f"[address: {restaurant['address']}] "

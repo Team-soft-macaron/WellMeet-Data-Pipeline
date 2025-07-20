@@ -7,27 +7,16 @@ logger = logging.getLogger(__name__)
 
 
 class ReviewStorageManager:
-    def __init__(
-        self,
-        bucket_name,
-        aws_access_key_id=None,
-        aws_secret_access_key=None,
-        region_name=None,
-    ):
+    def __init__(self, bucket_name):
         self.bucket_name = bucket_name
-        self.s3 = boto3.client(
-            "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name,
-        )
+        self.s3 = boto3.client("s3")
 
-    def upload_reviews_json(self, place_id, reviews):
+    def upload_reviews_json(self, placeId, reviews):
         """
-        리뷰 리스트(reviews)를 S3의 bucket에 place_id.json 파일로 저장
+        리뷰 리스트(reviews)를 S3의 bucket에 placeId.json 파일로 저장
         기존 파일이 있으면 합치기
         """
-        key = f"{place_id}.json"
+        key = f"{placeId}.json"
 
         # 기존 파일 확인 및 읽기
         existing_reviews = []
@@ -60,11 +49,11 @@ class ReviewStorageManager:
             f"Uploaded {key} to S3 bucket {self.bucket_name} (총 {len(all_reviews)}개 리뷰)"
         )
 
-    def get_review_ids_with_s3_select(self, place_id):
+    def get_review_ids_with_s3_select(self, placeId):
         """
-        S3 Select를 사용해 place_id.json 파일에서 리뷰 id만 리스트로 반환
+        S3 Select를 사용해 placeId.json 파일에서 리뷰 id만 리스트로 반환
         """
-        key = f"{place_id}.json"
+        key = f"{placeId}.json"
         logger.info(key)
         try:
             response = self.s3.select_object_content(

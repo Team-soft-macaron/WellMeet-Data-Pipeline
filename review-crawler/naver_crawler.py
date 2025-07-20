@@ -99,7 +99,7 @@ class NaverMapReviewCrawler:
         """
         )
 
-    def crawl_all_reviews(self, place_id: str, existing_ids: Set[str]) -> List[Dict]:
+    def crawl_all_reviews(self, placeId: str, existing_ids: Set[str]) -> List[Dict]:
         """네이버 지도의 모든 리뷰 크롤링
         existing_ids: 이미 존재하는 리뷰 id의 set. 발견 시 즉시 중단 (필수)."""
         with sync_playwright() as p:
@@ -168,7 +168,7 @@ class NaverMapReviewCrawler:
                 # 리뷰 페이지로 이동
                 page.goto("https://httpbin.org/headers")
                 page.wait_for_timeout(2000)
-                url = f"https://pcmap.place.naver.com/restaurant/{place_id}/review/visitor"
+                url = f"https://pcmap.place.naver.com/restaurant/{placeId}/review/visitor"
                 page.goto(url)
                 page.wait_for_selector("ul#_review_list", timeout=10000)
                 sort_buttons = page.query_selector_all("a.ScBz5")
@@ -196,8 +196,8 @@ class NaverMapReviewCrawler:
                     )
                     current_count = len(reviews)
                     # 1000개 이상 리뷰가 있으면 중단
-                    # if current_count > 1000:
-                    #     break
+                    if current_count > 1000:
+                        break
 
                     for elem in review_elements:
                         # 작성자
@@ -240,7 +240,7 @@ class NaverMapReviewCrawler:
                             reviews.append(
                                 {
                                     "id": review_id,
-                                    "place_id": place_id,
+                                    "placeId": placeId,
                                     "author": author_name,
                                     "content": review_text,
                                     "visit_date": visit_date,

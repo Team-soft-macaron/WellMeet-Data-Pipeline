@@ -26,4 +26,4 @@ RUN pip install -r requirements.txt && playwright install chromium
 
 COPY . .
 
-CMD ["python3", "restaurant-crawler.py"]
+CMD ["python3", "-u", "restaurant-crawler.py"]

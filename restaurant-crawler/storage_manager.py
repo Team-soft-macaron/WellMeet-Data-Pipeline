@@ -3,24 +3,13 @@ import json
 
 
 class RestaurantStorageManager:
-    def __init__(
-        self,
-        bucket_name,
-        aws_access_key_id=None,
-        aws_secret_access_key=None,
-        region_name=None,
-    ):
+    def __init__(self, bucket_name):
         self.bucket_name = bucket_name
-        self.s3 = boto3.client(
-            "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name,
-        )
+        self.s3 = boto3.client("s3")
 
     def upload_restaurants_json(self, query, restaurants):
         """
-        식당 리스트(restaurants)를 S3의 bucket에 place_id.json 파일로 저장
+        식당 리스트(restaurants)를 S3의 bucket에 placeId.json 파일로 저장
         기존 파일이 있으면 합치기
         """
         key = f"{query}.json"
@@ -77,8 +66,8 @@ class RestaurantStorageManager:
                     if line:
                         obj = json.loads(line)["_1"]
                         for object in obj:
-                            print(object["place_id"])
-                            ids.append(object["place_id"])
+                            print(object["placeId"])
+                            ids.append(object["placeId"])
 
             print(ids)
             return ids
