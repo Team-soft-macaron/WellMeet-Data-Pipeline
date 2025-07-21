@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 # 사용 예시
 def main():
     # 환경변수에서 S3 정보 읽기
-    bucket_name = os.environ.get("REVIEW_S3_BUCKET_NAME")
+    bucket_name = os.environ.get("S3_BUCKET_NAME")
+    bucket_directory = os.environ.get("REVIEW_BUCKET_DIRECTORY")
 
     # 환경변수에서 placeId 읽기
     placeId = os.environ.get("PLACE_ID")
@@ -23,7 +24,8 @@ def main():
 
     # S3 매니저 생성
     storage_manager = ReviewStorageManager(
-        bucket_name=bucket_name
+        bucket_name=bucket_name,
+        bucket_directory=bucket_directory,
     )
 
     # 기존 리뷰 id set 가져오기

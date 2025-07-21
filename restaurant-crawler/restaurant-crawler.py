@@ -137,16 +137,14 @@ class NaverMapRestaurantCrawler:
                 # 3. 네이버 상단 메뉴에서 지도 클릭 (새 창이 열림)
                 map_link = page.locator(".service_name:has-text('지도')")
 
-
                 # 새 창이 열릴 때까지 기다리기 위한 설정
                 async with page.context.expect_page() as new_page_info:
                     await map_link.click()
-                    
+
                 # 새로 열린 페이지로 전환
                 page = await new_page_info.value
                 await page.wait_for_load_state("domcontentloaded")
                 await page.wait_for_timeout(TIMEOUT)
-
 
                 search_input = await page.wait_for_selector(
                     "input.input_search", state="visible", timeout=TIMEOUT
@@ -327,7 +325,8 @@ class NaverMapRestaurantCrawler:
 # 사용 예시
 async def main():
     # S3 설정 (환경변수 사용)
-    upload_bucket_name = os.environ.get("RESTAURANT_S3_BUCKET_NAME")
+    upload_bucket_name = os.environ.get("S3_BUCKET_NAME")
+    upload_bucket_url = os.environ.get("RESTAURANT_BUCKET_DIRECTORY")
 
     search_query = os.environ.get("SEARCH_QUERY")
     print(f"search_query: {search_query}")
@@ -335,6 +334,7 @@ async def main():
     # S3 매니저 생성
     s3_manager = RestaurantStorageManager(
         bucket_name=upload_bucket_name,
+        bucket_directory=upload_bucket_url,
     )
 
     # 1. S3에서 기존 placeId 리스트 가져오기

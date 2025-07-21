@@ -3,8 +3,9 @@ import json
 
 
 class RestaurantStorageManager:
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name, bucket_directory):
         self.bucket_name = bucket_name
+        self.bucket_directory = bucket_directory
         self.s3 = boto3.client("s3")
 
     def upload_restaurants_json(self, query, restaurants):
@@ -12,7 +13,7 @@ class RestaurantStorageManager:
         식당 리스트(restaurants)를 S3의 bucket에 placeId.json 파일로 저장
         기존 파일이 있으면 합치기
         """
-        key = f"{query}.json"
+        key = f"{self.bucket_directory}/{query}.json"
 
         # 기존 파일 확인 및 읽기
         existing_reviews = []
@@ -40,7 +41,7 @@ class RestaurantStorageManager:
         """
         S3 Select를 사용해 query.json 파일에서 식당 id만 리스트로 반환
         """
-        key = f"{query}.json"
+        key = f"{self.bucket_directory}/{query}.json"
         print(key)
         try:
             response = self.s3.select_object_content(
