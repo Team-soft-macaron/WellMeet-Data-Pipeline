@@ -1,15 +1,22 @@
 import asyncio
+import random
 from playwright.async_api import async_playwright
 from typing import List, Dict, Optional, Tuple
 from geopy.geocoders import Nominatim
 from geopy.location import Location
 import re
-import json
 from storage_manager import RestaurantStorageManager
 import os
 
 # 타임아웃 상수 (ms)
 TIMEOUT = 10000
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+]
 
 
 class NaverMapRestaurantCrawler:
@@ -93,7 +100,7 @@ class NaverMapRestaurantCrawler:
 
             context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                user_agent=random.choice(USER_AGENTS),
                 locale="ko-KR",
                 timezone_id="Asia/Seoul",
                 permissions=["geolocation"],
@@ -226,7 +233,7 @@ class NaverMapRestaurantCrawler:
                 # 데이터 추출
                 restaurants = await frame.query_selector_all("li.UEzoS")
 
-                for restaurant in restaurants:
+                for restaurant in restaurants[:5]:
                     try:
                         # 식당 이름 정보
                         name_elem = await restaurant.query_selector("span.TYaxT")
